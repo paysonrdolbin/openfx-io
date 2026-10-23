@@ -196,6 +196,11 @@ colorSpaceName(OCIO::ConstConfigRcPtr config,
     } else if ((cs = config->getColorSpace(colorSpaceNameDefault))) {
         // maybe we're lucky
         return cs->getName();
+    } else if ((!strcmp(colorSpaceNameDefault, OCIO::ROLE_REFERENCE) || !strcmp(colorSpaceNameDefault, OCIO::ROLE_DEFAULT))
+               && config->getColorSpace(OCIO::ROLE_SCENE_LINEAR)) {
+        // OCIO v2 configs (e.g. the ACES 2.0 built-in configs) may define neither the "reference"
+        // nor the "default" role: use the working space instead
+        return OCIO::ROLE_SCENE_LINEAR;
     }
 
     // unlucky
@@ -219,6 +224,10 @@ canonicalizeColorSpace(OCIO::ConstConfigRcPtr config,
     const int texturepaintcs = config->getIndexForColorSpace(OCIO::ROLE_TEXTURE_PAINT);
     const int mattepaintcs = config->getIndexForColorSpace(OCIO::ROLE_MATTE_PAINT);
     int inputSpaceIndex = config->getIndexForColorSpace(csname.c_str());
+    if (inputSpaceIndex < 0) {
+        // unknown colorspace: don't let it match a role the config doesn't define (both are -1)
+        return csname;
+    }
     if (inputSpaceIndex == scenelinearcs) {
         return OCIO::ROLE_SCENE_LINEAR;
     } else if (inputSpaceIndex == defaultcs) {
@@ -955,7 +964,7 @@ GenericOCIO::changedParam(const InstanceChangedArgs& args,
                     cs = _config->getColorSpace(_config->getColorSpaceNameByIndex(0));
                 }
                 outputSpaceName = cs ? cs->getName() : OCIO::ROLE_DEFAULT;
-                _outputSpace->setValue(OCIO::ROLE_DEFAULT);
+                _outputSpace->setValue(outputSpaceName);
             }
         }
         outputCheck(args.time);

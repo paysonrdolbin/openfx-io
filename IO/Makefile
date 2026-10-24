@@ -29,6 +29,7 @@ OCIOCDLTransform.o \
 OCIOFileTransform.o \
 OCIOLogConvert.o \
 OCIOLookTransform.o \
+OCIONamedTransform.o \
 
 OCIO_OPENGL_OBJS = GenericOCIOOpenGL.o glsl.o glad.o gladegl.o ofxsOGLUtilities.o
 
@@ -54,6 +55,7 @@ $(TOP_SRCDIR)/OCIO/fr.inria.openfx.OCIODisplay.png \
 $(TOP_SRCDIR)/OCIO/fr.inria.openfx.OCIOFileTransform.png \
 $(TOP_SRCDIR)/OCIO/fr.inria.openfx.OCIOLogConvert.png \
 $(TOP_SRCDIR)/OCIO/fr.inria.openfx.OCIOLookTransform.png \
+$(TOP_SRCDIR)/OCIO/fr.inria.openfx.OCIONamedTransform.png \
 $(TOP_SRCDIR)/OIIO/fr.inria.openfx.OIIOText.png \
 $(TOP_SRCDIR)/OIIO/fr.inria.openfx.OIIOText.svg \
 $(TOP_SRCDIR)/OIIO/fr.inria.openfx.ReadOIIO.png \

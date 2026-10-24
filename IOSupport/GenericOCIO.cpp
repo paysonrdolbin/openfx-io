@@ -1332,11 +1332,9 @@ GenericOCIO::purgeCaches()
 }
 
 void
-GenericOCIO::describeInContextInput(ImageEffectDescriptor& desc,
-                                    ContextEnum /*context*/,
-                                    PageParamDescriptor* page,
-                                    const char* inputSpaceNameDefault,
-                                    const char* inputSpaceLabel)
+GenericOCIO::describeInContextConfig(ImageEffectDescriptor& desc,
+                                     ContextEnum /*context*/,
+                                     PageParamDescriptor* page)
 {
 #ifdef OFX_IO_USING_OCIO
     gHostIsNatron = (getImageEffectHostDescription()->isNatron);
@@ -1345,16 +1343,11 @@ GenericOCIO::describeInContextInput(ImageEffectDescriptor& desc,
     AutoSetAndRestoreThreadLocale locale;
     OCIO::ConstConfigRcPtr config;
     if (file != NULL) {
-        // Add choices
         try {
             config = OCIO::Config::CreateFromFile(file);
             gWasOCIOEnvVarFound = true;
         } catch (OCIO::Exception& e) {
         }
-    }
-    string inputSpaceName, outputSpaceName;
-    if (config) {
-        inputSpaceName = canonicalizeColorSpace(config, colorSpaceName(config, inputSpaceNameDefault));
     }
 
     ////////// OCIO config file
@@ -1383,6 +1376,36 @@ GenericOCIO::describeInContextInput(ImageEffectDescriptor& desc,
             page->addChild(*param);
         }
     }
+#endif // ifdef OFX_IO_USING_OCIO
+} // GenericOCIO::describeInContextConfig
+
+void
+GenericOCIO::describeInContextInput(ImageEffectDescriptor& desc,
+                                    ContextEnum context,
+                                    PageParamDescriptor* page,
+                                    const char* inputSpaceNameDefault,
+                                    const char* inputSpaceLabel)
+{
+#ifdef OFX_IO_USING_OCIO
+    gHostIsNatron = (getImageEffectHostDescription()->isNatron);
+
+    char* file = std::getenv("OCIO");
+    AutoSetAndRestoreThreadLocale locale;
+    OCIO::ConstConfigRcPtr config;
+    if (file != NULL) {
+        // Add choices
+        try {
+            config = OCIO::Config::CreateFromFile(file);
+            gWasOCIOEnvVarFound = true;
+        } catch (OCIO::Exception& e) {
+        }
+    }
+    string inputSpaceName, outputSpaceName;
+    if (config) {
+        inputSpaceName = canonicalizeColorSpace(config, colorSpaceName(config, inputSpaceNameDefault));
+    }
+
+    describeInContextConfig(desc, context, page);
 
     ///////////Input Color-space
     {

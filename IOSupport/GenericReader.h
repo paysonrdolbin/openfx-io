@@ -237,6 +237,13 @@ private:
                               double* /*fps*/) const { return false; }
 
     /**
+     * @brief Override to tell that a layer of the file holds data that is not color, even with R,G,B,A channels
+     * (e.g. Cryptomatte IDs and coverages): it is then read as-is, without colorspace conversion or premultiplication.
+     **/
+    virtual bool isDataLayer(const std::string& /*filename*/,
+                             const std::string& /*layerName*/) { return false; }
+
+    /**
      * @brief Override this function to actually decode the image contained in the file pointed to by filename.
      * If the file is a video-stream then you should decode the frame at the time given in parameters.
      * You must write the decoded image into dstImg. This function should convert the read pixels into the

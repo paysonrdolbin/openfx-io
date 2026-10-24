@@ -23,6 +23,7 @@
  */
 
 #include <algorithm>
+#include <cctype>
 #include <climits>
 #include <cmath>
 #include <cstddef>
@@ -478,6 +479,8 @@ private:
 
     virtual bool getFrameBounds(const string& filename, OfxTime time, int view, OfxRectI* bounds, OfxRectI* format, double* par, string* error, int* tile_width, int* tile_height) OVERRIDE FINAL;
 
+    virtual bool isDataLayer(const string& filename, const string& layerName) OVERRIDE FINAL;
+
     string metadata(const string& filename);
 
     void getSpecsFromImageInput(const ImageInputPtr& img, vector<ImageSpec>* subimages) const;
@@ -538,6 +541,10 @@ private:
     string _lastFileReadNoPlayback;
     Mutex _outputLayerMenuMutex;
     LayersUnionVect _outputLayerMenu;
+    // the Cryptomatte layer names (e.g. CryptoObject) of the last file asked to isDataLayer()
+    Mutex _dataLayersMutex;
+    string _dataLayersFile;
+    vector<string> _cryptomatteNames;
 };
 
 ReadOIIOPlugin::ReadOIIOPlugin(OfxImageEffectHandle handle,
@@ -560,6 +567,9 @@ ReadOIIOPlugin::ReadOIIOPlugin(OfxImageEffectHandle handle,
     , _lastFileReadNoPlayback()
     , _outputLayerMenuMutex()
     , _outputLayerMenu()
+    , _dataLayersMutex()
+    , _dataLayersFile()
+    , _cryptomatteNames()
 {
 #ifdef OFX_READ_OIIO_USES_CACHE
     if (useOIIOCache) {
@@ -630,6 +640,8 @@ ReadOIIOPlugin::clearAnyCache()
         /// flush the OIIO cache
         _cache->invalidate_all(true);
     }
+    AutoMutex lock(_dataLayersMutex);
+    _dataLayersFile.clear();
 }
 
 static string
@@ -2737,6 +2749,37 @@ ReadOIIOPlugin::decodePlane(const string& filename,
         img->close();
     }
 } // ReadOIIOPlugin::decodePlane
+
+// Cryptomatte layers (<name>00, <name>01... with "cryptomatte/<key>/name" = <name> in the header) hold IDs and
+// coverages: a colorspace conversion or (un)premultiplication would destroy the IDs.
+bool
+ReadOIIOPlugin::isDataLayer(const string& filename,
+                            const string& layerName)
+{
+    if ( (layerName.size() < 3) || !std::isdigit( (unsigned char)layerName[layerName.size() - 1] ) ||
+         !std::isdigit( (unsigned char)layerName[layerName.size() - 2] ) ) {
+        return false;
+    }
+    AutoMutex lock(_dataLayersMutex);
+    if (filename != _dataLayersFile) {
+        _cryptomatteNames.clear();
+        vector<ImageSpec> subimages;
+        getSpecs(filename, &subimages);
+        if ( !subimages.empty() ) {
+            for (const ParamValue& p : subimages[0].extra_attribs) {
+                const string name = p.name().string();
+                if ( (name.compare(0, 12, "cryptomatte/") == 0) && (name.size() > 17) &&
+                     (name.compare(name.size() - 5, 5, "/name") == 0) && (p.type() == TypeDesc::STRING) ) {
+                    _cryptomatteNames.push_back( subimages[0].get_string_attribute(name) );
+                }
+            }
+        }
+        _dataLayersFile = filename;
+    }
+    const string base = layerName.substr(0, layerName.size() - 2);
+
+    return std::find(_cryptomatteNames.begin(), _cryptomatteNames.end(), base) != _cryptomatteNames.end();
+}
 
 bool
 ReadOIIOPlugin::getFrameBounds(const string& filename,

@@ -1685,6 +1685,9 @@ GenericReaderPlugin::render(const RenderArguments& args)
             MultiPlane::ImagePlaneDesc::mapOFXComponentsTypeStringToPlanes(it->rawComps, &plane, &pairedPlane);
             const std::vector<std::string>& channels = plane.getChannels();
             isColor = ((channels.size() == 3 && channels[0] == "R" && channels[1] == "G" && channels[2] == "B") || (channels.size() == 4 && channels[0] == "R" && channels[1] == "G" && channels[2] == "B" && channels[3] == "A"));
+            if ( isColor && isDataLayer( filename, plane.getPlaneLabel() ) ) {
+                isColor = false;
+            }
             isCustom = true;
 
             if (it->numChans == 3) {

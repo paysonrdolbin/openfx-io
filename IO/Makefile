@@ -30,6 +30,7 @@ OCIOFileTransform.o \
 OCIOLogConvert.o \
 OCIOLookTransform.o \
 OCIONamedTransform.o \
+Cryptomatte.o \
 
 OCIO_OPENGL_OBJS = GenericOCIOOpenGL.o glsl.o glad.o gladegl.o ofxsOGLUtilities.o
 
@@ -81,6 +82,7 @@ RESOURCES += ../RunScript/fr.inria.openfx.RunScript.png \
 endif
 
 VPATH += \
+$(TOP_SRCDIR)/Cryptomatte \
 $(TOP_SRCDIR)/EXR \
 $(TOP_SRCDIR)/FFmpeg \
 $(TOP_SRCDIR)/OCIO \

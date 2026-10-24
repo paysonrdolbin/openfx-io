@@ -132,6 +132,7 @@ file(GLOB IO_SOURCES_OPENCOLORIO
 )
 file(GLOB IO_SOURCES_OPENIMAGEIO
   "OIIO/*.cpp"
+  "Cryptomatte/*.cpp" # needs OpenImageIO for the metadata
   "SupportExt/ofxsOGLTextRenderer.cpp"
   "SupportExt/ofxsOGLFontData.cpp"
 )

@@ -150,6 +150,8 @@ public:
     void getOutputColorspace(std::string& v) const;
     void getOutputColorspaceAtTime(double time, std::string& v) const;
     bool hasColorspace(const char* name) const;
+    // The name of the colorspace with this name or alias (OCIO v2) in the current config, or "".
+    std::string getColorspaceName(const char* nameOrAlias) const;
     void setInputColorspace(const char* name);
     void setOutputColorspace(const char* name);
 #ifdef OFX_IO_USING_OCIO

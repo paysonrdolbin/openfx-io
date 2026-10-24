@@ -1577,6 +1577,10 @@ ReadOIIOPlugin::guessColorspace(const string& filename,
                     // nuke-default
                     *colorspace = "Gamma1.8";
                     colorSpaceStr = NULL;
+                } else if (ocio->hasColorspace("g18_rec709")) {
+                    // alias of "Gamma 1.8 Rec.709 - Texture" or "Gamma 1.8 Encoded Rec.709" in the OCIO built-in ACES configs
+                    *colorspace = ocio->getColorspaceName("g18_rec709");
+                    colorSpaceStr = NULL;
                 }
 #endif
             } else if (std::fabs(gamma - 2.2) < 0.01) {
@@ -1592,6 +1596,10 @@ ReadOIIOPlugin::guessColorspace(const string& filename,
                 } else if (ocio->hasColorspace("vd16")) {
                     // vd16 in spi-anim and spi-vfx
                     *colorspace = "vd16";
+                    colorSpaceStr = NULL;
+                } else if (ocio->hasColorspace("g22_rec709")) {
+                    // alias of "Gamma 2.2 Rec.709 - Texture" or "Gamma 2.2 Encoded Rec.709" in the OCIO built-in ACES configs
+                    *colorspace = ocio->getColorspaceName("g22_rec709");
                     colorSpaceStr = NULL;
                 } else
 #endif
@@ -1642,6 +1650,10 @@ ReadOIIOPlugin::guessColorspace(const string& filename,
                 // vd16 in spi-anim
                 *colorspace = "vd16";
                 colorSpaceStr = NULL;
+            } else if (ocio->hasColorspace("srgb_tx")) {
+                // alias of "sRGB - Texture" or "sRGB Encoded Rec.709 (sRGB)" in the OCIO built-in ACES configs
+                *colorspace = ocio->getColorspaceName("srgb_tx");
+                colorSpaceStr = NULL;
             }
         }
         if (colorSpaceStr && !strcmp(colorSpaceStr, "AdobeRGB")) {
@@ -1683,6 +1695,10 @@ ReadOIIOPlugin::guessColorspace(const string& filename,
             } else if (ocio->hasColorspace("hd10")) {
                 // hd10 in spi-anim and spi-vfx
                 *colorspace = "hd10";
+                colorSpaceStr = NULL;
+            } else if (ocio->hasColorspace("rec1886_rec709_display")) {
+                // alias of "Rec.1886 Rec.709 - Display" in the OCIO built-in ACES configs
+                *colorspace = ocio->getColorspaceName("rec1886_rec709_display");
                 colorSpaceStr = NULL;
             }
         }

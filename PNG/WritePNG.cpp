@@ -497,15 +497,19 @@ WritePNGPlugin::write_info(png_structp& sp,
     }
 
 #if defined(PNG_GAMMA_SUPPORTED)
-    if ((ocioColorspace == "sRGB") || (ocioColorspace == "sRGB D65") || (ocioColorspace == "sRGB (D60 sim.)") || (ocioColorspace == "out_srgbd60sim") || (ocioColorspace == "rrt_srgb") || (ocioColorspace == "srgb8")) {
+    // aliases in the OCIO built-in ACES configs
+    const string srgbTx = _ocio->getColorspaceName("srgb_tx");
+    const string g18Rec709 = _ocio->getColorspaceName("g18_rec709");
+    const string g22Rec709 = _ocio->getColorspaceName("g22_rec709");
+    if ((ocioColorspace == "sRGB") || (ocioColorspace == "sRGB D65") || (ocioColorspace == "sRGB (D60 sim.)") || (ocioColorspace == "out_srgbd60sim") || (ocioColorspace == "rrt_srgb") || (ocioColorspace == "srgb8") || (!srgbTx.empty() && ocioColorspace == srgbTx)) {
         png_set_sRGB_gAMA_and_cHRM(sp, ip, PNG_sRGB_INTENT_ABSOLUTE);
-    } else if (ocioColorspace == "Gamma1.8") {
+    } else if ((ocioColorspace == "Gamma1.8") || (!g18Rec709.empty() && ocioColorspace == g18Rec709)) {
 #ifdef PNG_GAMMA_MAC_18 // appeared in libpng 1.5.4
         png_set_gAMA_fixed(sp, ip, PNG_GAMMA_MAC_18);
 #else
         png_set_gAMA(sp, ip, 1.0f / 1.8);
 #endif
-    } else if ((ocioColorspace == "Gamma2.2") || (ocioColorspace == "vd8") || (ocioColorspace == "vd10") || (ocioColorspace == "vd16") || (ocioColorspace == "VD16")) {
+    } else if ((ocioColorspace == "Gamma2.2") || (ocioColorspace == "vd8") || (ocioColorspace == "vd10") || (ocioColorspace == "vd16") || (ocioColorspace == "VD16") || (!g22Rec709.empty() && ocioColorspace == g22Rec709)) {
         png_set_gAMA(sp, ip, 1.0f / 2.2);
     } else if (
 #ifdef OFX_IO_USING_OCIO
@@ -852,6 +856,9 @@ WritePNGPlugin::onOutputFileChanged(const string& /*filename*/,
             } else if (_ocio->hasColorspace("srgb8")) {
                 // srgb8 in spi-vfx
                 _ocio->setOutputColorspace("srgb8");
+            } else if (_ocio->hasColorspace("srgb_tx")) {
+                // alias of "sRGB - Texture" or "sRGB Encoded Rec.709 (sRGB)" in the OCIO built-in ACES configs
+                _ocio->setOutputColorspace(_ocio->getColorspaceName("srgb_tx").c_str());
             }
             break;
         }

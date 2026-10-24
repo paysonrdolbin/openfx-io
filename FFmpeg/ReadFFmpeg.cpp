@@ -305,6 +305,9 @@ ReadFFmpegPlugin::guessParamsFromFilename(const string& filename,
     } else if (_ocio->hasColorspace("hd10")) {
         // hd10 in spi-anim and spi-vfx
         *colorspace = "hd10";
+    } else if (_ocio->hasColorspace("rec1886_rec709_display")) {
+        // alias of "Rec.1886 Rec.709 - Display" in the OCIO built-in ACES configs
+        *colorspace = _ocio->getColorspaceName("rec1886_rec709_display");
     }
 #endif
 

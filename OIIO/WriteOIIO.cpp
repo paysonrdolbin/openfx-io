@@ -721,6 +721,9 @@ WriteOIIOPlugin::onOutputFileChanged(const string& filename,
             } else if (_ocio->hasColorspace("srgb8")) {
                 // srgb8 in spi-vfx
                 _ocio->setOutputColorspace("srgb8");
+            } else if (_ocio->hasColorspace("srgb_tx")) {
+                // alias of "sRGB - Texture" or "sRGB Encoded Rec.709 (sRGB)" in the OCIO built-in ACES configs
+                _ocio->setOutputColorspace(_ocio->getColorspaceName("srgb_tx").c_str());
             }
             break;
         }
@@ -778,6 +781,9 @@ WriteOIIOPlugin::onOutputFileChanged(const string& filename,
                 } else if (_ocio->hasColorspace("hd10")) {
                     // hd10 in spi-anim and spi-vfx
                     _ocio->setOutputColorspace("hd10");
+                } else if (_ocio->hasColorspace("rec1886_rec709_display")) {
+                    // alias of "Rec.1886 Rec.709 - Display" in the OCIO built-in ACES configs
+                    _ocio->setOutputColorspace(_ocio->getColorspaceName("rec1886_rec709_display").c_str());
                 }
             }
             break;
@@ -1079,23 +1085,28 @@ WriteOIIOPlugin::beginEncodeParts(void* user_data,
     _ocio->getOutputColorspaceAtTime(time, ocioColorspace);
     float gamma = 0.f;
     string colorSpaceStr;
-    if (ocioColorspace == "Gamma1.8") {
+    // aliases in the OCIO built-in ACES configs
+    const string srgbTx = _ocio->getColorspaceName("srgb_tx");
+    const string g18Rec709 = _ocio->getColorspaceName("g18_rec709");
+    const string g22Rec709 = _ocio->getColorspaceName("g22_rec709");
+    const string rec1886 = _ocio->getColorspaceName("rec1886_rec709_display");
+    if ((ocioColorspace == "Gamma1.8") || (!g18Rec709.empty() && ocioColorspace == g18Rec709)) {
         // Gamma1.8 in nuke-default
         colorSpaceStr = "GammaCorrected";
         gamma = 1.8f;
-    } else if ((ocioColorspace == "Gamma2.2") || (ocioColorspace == "vd8") || (ocioColorspace == "vd10") || (ocioColorspace == "vd16") || (ocioColorspace == "VD16")) {
+    } else if ((ocioColorspace == "Gamma2.2") || (ocioColorspace == "vd8") || (ocioColorspace == "vd10") || (ocioColorspace == "vd16") || (ocioColorspace == "VD16") || (!g22Rec709.empty() && ocioColorspace == g22Rec709)) {
         // Gamma2.2 in nuke-default
         // vd8, vd10, vd16 in spi-anim and spi-vfx
         // VD16 in blender
         colorSpaceStr = "GammaCorrected";
         gamma = 2.2f;
-    } else if ((ocioColorspace == "sRGB") || (ocioColorspace == "sRGB D65") || (ocioColorspace == "sRGB (D60 sim.)") || (ocioColorspace == "out_srgbd60sim") || (ocioColorspace == "rrt_srgb") || (ocioColorspace == "srgb8")) {
+    } else if ((ocioColorspace == "sRGB") || (ocioColorspace == "sRGB D65") || (ocioColorspace == "sRGB (D60 sim.)") || (ocioColorspace == "out_srgbd60sim") || (ocioColorspace == "rrt_srgb") || (ocioColorspace == "srgb8") || (!srgbTx.empty() && ocioColorspace == srgbTx)) {
         // sRGB in nuke-default and blender
         // out_srgbd60sim or "sRGB (D60 sim.)" in aces 1.0.0
         // rrt_srgb in aces
         // srgb8 in spi-vfx
         colorSpaceStr = "sRGB";
-    } else if ((ocioColorspace == "Rec709") || (ocioColorspace == "nuke_rec709") || (ocioColorspace == "Rec 709 Curve") || (ocioColorspace == "Rec.709 - Full") || (ocioColorspace == "out_rec709full") || (ocioColorspace == "rrt_rec709") || (ocioColorspace == "hd10")) {
+    } else if ((ocioColorspace == "Rec709") || (ocioColorspace == "nuke_rec709") || (ocioColorspace == "Rec 709 Curve") || (ocioColorspace == "Rec.709 - Full") || (ocioColorspace == "out_rec709full") || (ocioColorspace == "rrt_rec709") || (ocioColorspace == "hd10") || (!rec1886.empty() && ocioColorspace == rec1886)) {
         // Rec709 in nuke-default
         // nuke_rec709 in blender
         // out_rec709full or "Rec.709 - Full" in aces 1.0.0

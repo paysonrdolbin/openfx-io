@@ -139,6 +139,9 @@ colorSpaceName(OCIO::ConstConfigRcPtr config,
         } else if ((cs = config->getColorSpace("VD16"))) {
             // VD16 in blender
             return cs->getName();
+        } else if ((cs = config->getColorSpace("srgb_tx"))) {
+            // alias of "sRGB - Texture" or "sRGB Encoded Rec.709 (sRGB)" in the OCIO built-in ACES configs
+            return cs->getName();
         }
     } else if (!strcmp(colorSpaceNameDefault, "AdobeRGB") || !strcmp(colorSpaceNameDefault, "adobergb")) {
         if ((cs = config->getColorSpace("AdobeRGB"))) {
@@ -166,6 +169,9 @@ colorSpaceName(OCIO::ConstConfigRcPtr config,
             return cs->getName();
         } else if ((cs = config->getColorSpace("hd10"))) {
             // hd10 in spi-anim and spi-vfx
+            return cs->getName();
+        } else if ((cs = config->getColorSpace("rec1886_rec709_display"))) {
+            // alias of "Rec.1886 Rec.709 - Display" in the OCIO built-in ACES configs
             return cs->getName();
         }
     } else if (!strcmp(colorSpaceNameDefault, "KodakLog") || !strcmp(colorSpaceNameDefault, "kodaklog")) {
@@ -1282,6 +1288,21 @@ GenericOCIO::hasColorspace(const char* name) const
 
     return false;
 #endif
+}
+
+string
+GenericOCIO::getColorspaceName(const char* nameOrAlias) const
+{
+#ifdef OFX_IO_USING_OCIO
+    OCIO::ConstColorSpaceRcPtr cs;
+    if ( _config && (cs = _config->getColorSpace(nameOrAlias)) ) {
+        return cs->getName();
+    }
+#else
+    (void)nameOrAlias;
+#endif
+
+    return string();
 }
 
 void

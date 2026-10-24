@@ -1338,6 +1338,9 @@ ReadPNGPlugin::guessParamsFromFilename(const string& filename,
             } else if (_ocio->hasColorspace("vd16")) {
                 // vd16 in spi-anim
                 *colorspace = "vd16";
+            } else if (_ocio->hasColorspace("srgb_tx")) {
+                // alias of "sRGB - Texture" or "sRGB Encoded Rec.709 (sRGB)" in the OCIO built-in ACES configs
+                *colorspace = _ocio->getColorspaceName("srgb_tx");
             }
         }
         break;
@@ -1372,6 +1375,9 @@ ReadPNGPlugin::guessParamsFromFilename(const string& filename,
         } else if (_ocio->hasColorspace("vd16")) {
             // vd16 in spi-anim
             *colorspace = "vd16";
+        } else if (_ocio->hasColorspace("srgb_tx")) {
+            // alias of "sRGB - Texture" or "sRGB Encoded Rec.709 (sRGB)" in the OCIO built-in ACES configs
+            *colorspace = _ocio->getColorspaceName("srgb_tx");
         }
 
         break;
@@ -1397,6 +1403,9 @@ ReadPNGPlugin::guessParamsFromFilename(const string& filename,
         } else if (_ocio->hasColorspace("hd10")) {
             // hd10 in spi-anim and spi-vfx
             *colorspace = "hd10";
+        } else if (_ocio->hasColorspace("rec1886_rec709_display")) {
+            // alias of "Rec.1886 Rec.709 - Display" in the OCIO built-in ACES configs
+            *colorspace = _ocio->getColorspaceName("rec1886_rec709_display");
         }
         break;
     case ePNGColorSpaceLinear:

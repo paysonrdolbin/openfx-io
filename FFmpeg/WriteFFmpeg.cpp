@@ -1561,7 +1561,8 @@ WriteFFmpegPlugin::getColorInfo(AVColorPrimaries* color_primaries,
                (selection == "out_rec709full") || // aces 1.0.0
                (selection == "rrt_rec709_full_100nits") || // aces 0.7.1
                (selection == "rrt_rec709") || // rrt_rec709 in aces
-               (selection == "hd10")) { // hd10 in spi-anim and spi-vfx
+               (selection == "hd10") || // hd10 in spi-anim and spi-vfx
+               (!selection.empty() && selection == _ocio->getColorspaceName("rec1886_rec709_display"))) { // OCIO built-in ACES configs
         *color_primaries = AVCOL_PRI_BT709;
         *color_trc = AVCOL_TRC_BT709; ///< also ITU-R BT1361
     } else if ((selection.find("KodakLog") != string::npos) || (selection.find("kodaklog") != string::npos) || (selection.find("Cineon") != string::npos) || // Cineon in nuke-default, blender
@@ -4639,6 +4640,9 @@ WriteFFmpegPlugin::onOutputFileChanged(const string& filename,
         } else if (_ocio->hasColorspace("hd10")) {
             // hd10 in spi-anim and spi-vfx
             _ocio->setOutputColorspace("hd10");
+        } else if (_ocio->hasColorspace("rec1886_rec709_display")) {
+            // alias of "Rec.1886 Rec.709 - Display" in the OCIO built-in ACES configs
+            _ocio->setOutputColorspace(_ocio->getColorspaceName("rec1886_rec709_display").c_str());
         }
 #endif
     }

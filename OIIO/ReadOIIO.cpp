@@ -1533,6 +1533,24 @@ ReadOIIOPlugin::guessColorspace(const string& filename,
             colorSpaceStr = "KodakLog";
         }
     }
+    // OpenImageIO 3 names color spaces with the color interop IDs (e.g. "srgb_rec709_scene"). Configs
+    // that know them (as aliases in the ACES 2.0 built-in configs) use them as is, others get the
+    // OpenImageIO 2 names that are handled below.
+    if ( colorSpaceStr
+#ifdef OFX_IO_USING_OCIO
+         && !ocio->hasColorspace(colorSpaceStr)
+#endif
+         ) {
+        if ( !strcmp(colorSpaceStr, "srgb_rec709_scene") || !strcmp(colorSpaceStr, "srgb_rec709_display") ||
+             !strcmp(colorSpaceStr, "srgb_texture") || !strcmp(colorSpaceStr, "srgb_tx") ) {
+            colorSpaceStr = "sRGB";
+        } else if ( !strcmp(colorSpaceStr, "lin_rec709_scene") || !strcmp(colorSpaceStr, "lin_rec709") ||
+                    !strcmp(colorSpaceStr, "lin_srgb") ) {
+            colorSpaceStr = "Linear";
+        } else if ( !strcmp(colorSpaceStr, "g24_rec709_scene") || !strcmp(colorSpaceStr, "g24_rec709_display") ) {
+            colorSpaceStr = "Rec709";
+        }
+    }
     if (!colorSpaceStr) {
         // no colorspace... we'll probably have to try something else, then.
         // we set the following defaults:
@@ -1742,8 +1760,8 @@ ReadOIIOPlugin::guessColorspace(const string& filename,
             // lnf in spi-vfx
         }
         if (colorSpaceStr && ocio->hasColorspace(colorSpaceStr)) {
-            // maybe we're lucky
-            *colorspace = colorSpaceStr;
+            // maybe we're lucky (the name may be an alias: show the color space's own name)
+            *colorspace = ocio->getColorspaceName(colorSpaceStr);
             colorSpaceStr = NULL;
         }
         if (colorSpaceStr) {

@@ -2020,7 +2020,25 @@ GenericReaderPlugin::changedFilename(const InstanceChangedArgs& args)
             string name = filename;
             (void)SequenceParsing::removePath(name); // only use the file NAME
 #if OCIO_VERSION_HEX >= 0x02000000
-            const char* colorSpaceStr = ocioConfig->getColorSpaceFromFilepath(name.c_str());
+            // OCIO v2 file rules: an explicit rule of the config (e.g. "*.exr is ACES2065-1" in the ACES
+            // configs) is the studio's choice and wins over the colorspace guessed from the file format.
+            // The default rule is ignored (the format guess is better), and the colorspace-name search
+            // rule is handled below like OCIO 1's parseColorSpaceFromString.
+            size_t ruleIndex = 0;
+            const char* colorSpaceStr = ocioConfig->getColorSpaceFromFilepath(filename.c_str(), ruleIndex);
+            const char* ruleName = ocioConfig->getFileRules()->getName(ruleIndex);
+            if ( colorSpaceStr && *colorSpaceStr && ruleName &&
+                 (std::strcmp(ruleName, OCIO::FileRules::DefaultRuleName) != 0) &&
+                 (std::strcmp(ruleName, OCIO::FileRules::FilePathSearchRuleName) != 0) &&
+                 _ocio->hasColorspace(colorSpaceStr) ) {
+                _ocio->setInputColorspace(colorSpaceStr);
+                setColorSpace = false;
+            }
+            colorSpaceStr = setColorSpace ? ocioConfig->getColorSpaceFromFilepath(name.c_str(), ruleIndex) : NULL;
+            ruleName = setColorSpace ? ocioConfig->getFileRules()->getName(ruleIndex) : NULL;
+            if ( !ruleName || (std::strcmp(ruleName, OCIO::FileRules::FilePathSearchRuleName) != 0) ) {
+                colorSpaceStr = NULL;
+            }
 #else
             const char* colorSpaceStr = ocioConfig->parseColorSpaceFromString(name.c_str());
 #endif
@@ -2044,8 +2062,7 @@ GenericReaderPlugin::changedFilename(const InstanceChangedArgs& args)
                     colorSpaceStrLen = 0;
                 }
             }
-            if (colorSpaceStr && colorSpaceStrLen > 0) {
-                assert(_ocio->hasColorspace(colorSpaceStr)); // parseColorSpaceFromString always returns an existing colorspace
+            if (colorSpaceStr && colorSpaceStrLen > 0 && _ocio->hasColorspace(colorSpaceStr)) {
                 // we're lucky
                 _ocio->setInputColorspace(colorSpaceStr);
                 setColorSpace = false;
